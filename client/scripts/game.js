@@ -2,9 +2,9 @@
 /////////////////////// SETUP /////////////////////////////
 ///////////////////////////////////////////////////////////
 var towerDefense = {};
-
 $(function () 
 {
+    towerDefense.setupCanvas();
     loadImages();
     loadTiles();
     towerDefense.generateMap();
@@ -38,9 +38,22 @@ function updateFps() {
 }
 var imgs = [];
 
+towerDefense.setupCanvas = function()
+{
+    var canvas = $('canvas')[0];
+    canvas.width = 64*14;
+    canvas.height = 64*14;
+    towerDefense.canvasWidth = canvas.width;
+    towerDefense.canvasHeight = canvas.height;
+}
+
+///////////////////////////////////////////////////////////
+/////////////////////// Images ////////////////////////////
+///////////////////////////////////////////////////////////
+
 function loadImages()
 {
-    var imgNames = ['test','test1','test2','test3'];
+    var imgNames = ['test','test1','test2','test3','test4'];
     imgNames.forEach(function(el){
         loadImage(el);
     });
@@ -56,6 +69,39 @@ function loadImage(name)
     imgs[name] = newImg;
 }
 ///////////////////////////////////////////////////////////
+/////////////////////// Camera ////////////////////////////
+///////////////////////////////////////////////////////////
+towerDefense.cameraX = 0;
+towerDefense.cameraY = 0;
+
+towerDefense.setCameraPos = function(x,y)
+{
+    if(x>=0)
+    {
+        var maxX = towerDefense.mapWidth-towerDefense.canvasWidth;
+        var maxX = maxX + Math.floor(maxX/64);
+        if(x<maxX)
+            towerDefense.cameraX = x;
+        else
+            towerDefense.cameraX = maxX-1; // index starts at 0
+    }
+    else
+        towerDefense.cameraX = 0;
+    
+    if(y>=0)
+    {
+        var maxY = towerDefense.mapHeight-towerDefense.canvasHeight;
+        var maxY = maxY + Math.floor(maxY/64);
+        if(y<maxY)
+            towerDefense.cameraY = y;
+        else
+            towerDefense.cameraY = maxY-1; // index starts at 0
+    }
+    else
+        towerDefense.cameraY = 0;
+}
+
+///////////////////////////////////////////////////////////
 /////////////////////// Tiles /////////////////////////////
 ///////////////////////////////////////////////////////////
 
@@ -63,7 +109,7 @@ towerDefense.tiles = [];
 
 function loadTiles()
 {
-    var tileNames = ['test3'];
+    var tileNames = ['test3','test4'];
     tileNames.forEach(function(el){
         loadTile(el);
     });
@@ -86,17 +132,22 @@ towerDefense.mapHeight = 0;
 
 towerDefense.generateMap = function()
 {
-    var size= 64*64;
+    var size= 30;
     for(var x=0;x<size;x++)
     {
         var tileColumn = [];
         for(var y=0;y<size;y++)
-            tileColumn.push(towerDefense.tiles['test3']);
+        {
+            if(y==0 || x==0 || y==size-1 || x==size-1)
+                tileColumn.push(towerDefense.tiles['test4']);  
+            else
+                tileColumn.push(towerDefense.tiles['test3']);  
+        }
         towerDefense.map.push(tileColumn);
     }
     
-    towerDefense.mapWidth = size;
-    towerDefense.mapHeight = size;
+    towerDefense.mapWidth = size*64;
+    towerDefense.mapHeight = size*64;
 }
 
 towerDefense.getTileAt = function(x, y)
@@ -149,11 +200,20 @@ function createSprite()
 ///////////////////////////////////////////////////////////
 //////////////////// CanvasEvents /////////////////////////
 ///////////////////////////////////////////////////////////
+towerDefense.oldX = 0;
+towerDefense.oldY = 0;
 
-function canvasMouseDown()
+function canvasMouseDown(evt)
 {
+    var canvas = $("canvas")[0];
+    var rect = canvas.getBoundingClientRect();
+
+    towerDefense.oldX = evt.clientX - rect.left;
+    towerDefense.oldY = evt.clientY - rect.top;
+    
     console.log("asdDown");
     towerDefense.mouseDrag = true;
+    console.log(towerDefense.mouseDrag);
 }
 
 function canvasMouseUp()
@@ -165,12 +225,15 @@ function canvasMouseMove(evt)
 {
     var canvas = $("canvas")[0];
     var rect = canvas.getBoundingClientRect();
-
-    x= evt.clientX - rect.left;
-    y=evt.clientY - rect.top;
+    
+    var newX = evt.clientX - rect.left;
+    var newY =evt.clientY - rect.top;
     if(towerDefense.mouseDrag == true)
-        if(towerDefense.events.onDrag() == false)
-            towerDefense.mouseDrag = false;
+        if(towerDefense.events.onDrag(towerDefense.oldX, towerDefense.oldY, newX, newY) == false)
+            towerDefense.mouseDrag = true;
+
+    towerDefense.oldX = newX
+    towerDefense.oldY = newY;
 }
 
 function canvasMouseLeave()
@@ -183,11 +246,12 @@ function canvasMouseLeave()
 ///////////////////////////////////////////////////////////
 towerDefense.events = {};
 
-towerDefense.events.onDrag = function()
+towerDefense.events.onDrag = function(oldX, oldY, newX, newY)
 {
     // Game logic when mouse is dragging, return false to stop it
     console.log("ENTITIES ARE BEING DRAGGED");
-    
+    towerDefense.setCameraPos(towerDefense.cameraX+(oldX-newX),towerDefense.cameraY+(oldY-newY));
+    console.log();
     return true;
 }
 
@@ -197,9 +261,8 @@ towerDefense.events.onDraw = function()
     var canvas = $("canvas")[0];
     var context = canvas.getContext("2d");
     context.clearRect(0,0,canvas.width,canvas.height);
-    for(var grassX =0;grassX<canvas.width/64;grassX++)
-        for(var grassY =0;grassY<canvas.height/64;grassY++)
-            context.drawImage(towerDefense.getTileAt(grassX,grassY).sprite,grassX*64,grassY*64);   
+    
+    drawBackground(canvas,context);
     
     drawRotatedImg(imgs['test1'],50,50,x++,context);
     updateFps();
@@ -217,4 +280,25 @@ function drawRotatedImg(img, x, y, angle, context)
    context.translate(-x-img.width/2,-y-img.height/2);
    context.drawImage(img,x,y);
    context.restore();
+}
+
+function drawBackground(canvas, context)
+{
+    var offsetX = towerDefense.cameraX%64;
+    var offsetY = towerDefense.cameraY%64;
+    var asdX = 0;
+    var asdY = 0;
+    if(towerDefense.cameraX > 0)
+        asdX = Math.floor(towerDefense.cameraX/64);
+    if(towerDefense.cameraY > 0)
+        asdY = Math.floor(towerDefense.cameraY/64);
+    console.log(towerDefense.cameraX+":"+asdX);
+    
+    for(var x=0;x<canvas.width/64+1;x++)
+        for(var y=0;y<canvas.height/64+1;y++)
+            if(asdX+x<towerDefense.mapWidth/64 && asdY+y<towerDefense.mapHeight/64)
+            context.drawImage(towerDefense.getTileAt(asdX+x,asdY+y).sprite,asdX+x*64-offsetX,asdY+y*64-offsetY);
+    /*for(var grassX =0;grassX<canvas.width/64;grassX++)
+        for(var grassY =0;grassY<canvas.height/64;grassY++)
+            context.drawImage(towerDefense.getTileAt(Math.round(towerDefense.cameraX/64)+grassX,1).sprite,grassX*64+offsetX,grassY*64+offsetY); */  
 }
