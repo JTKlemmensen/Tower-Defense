@@ -6,7 +6,8 @@ var towerDefense = {};
 $(function () 
 {
     loadImages();
-
+    loadTiles();
+    towerDefense.generateMap();
     var fps = 60;
     var updateRate = 1000/fps;
     window.setInterval(towerDefense.events.onDraw, updateRate);
@@ -54,6 +55,55 @@ function loadImage(name)
     newImg.src = '/images/'+name;
     imgs[name] = newImg;
 }
+///////////////////////////////////////////////////////////
+/////////////////////// Tiles /////////////////////////////
+///////////////////////////////////////////////////////////
+
+towerDefense.tiles = [];
+
+function loadTiles()
+{
+    var tileNames = ['test3'];
+    tileNames.forEach(function(el){
+        loadTile(el);
+    });
+}
+
+function loadTile(name)
+{
+    var tile = {};
+    tile.sprite = imgs[name];
+    towerDefense.tiles[name] = tile;
+}
+
+///////////////////////////////////////////////////////////
+//////////////////////// Map //////////////////////////////
+///////////////////////////////////////////////////////////
+
+towerDefense.map = [];
+towerDefense.mapWidth = 0;
+towerDefense.mapHeight = 0;
+
+towerDefense.generateMap = function()
+{
+    var size= 64*64;
+    for(var x=0;x<size;x++)
+    {
+        var tileColumn = [];
+        for(var y=0;y<size;y++)
+            tileColumn.push(towerDefense.tiles['test3']);
+        towerDefense.map.push(tileColumn);
+    }
+    
+    towerDefense.mapWidth = size;
+    towerDefense.mapHeight = size;
+}
+
+towerDefense.getTileAt = function(x, y)
+{
+    return towerDefense.map[x][y];
+}
+
 ///////////////////////////////////////////////////////////
 ////////////////////// Entities ///////////////////////////
 ///////////////////////////////////////////////////////////
@@ -146,10 +196,10 @@ towerDefense.events.onDraw = function()
     // Draw code
     var canvas = $("canvas")[0];
     var context = canvas.getContext("2d");
- 
+    context.clearRect(0,0,canvas.width,canvas.height);
     for(var grassX =0;grassX<canvas.width/64;grassX++)
         for(var grassY =0;grassY<canvas.height/64;grassY++)
-            context.drawImage(imgs['test3'],grassX*64,grassY*64);    
+            context.drawImage(towerDefense.getTileAt(grassX,grassY).sprite,grassX*64,grassY*64);   
     
     drawRotatedImg(imgs['test1'],50,50,x++,context);
     updateFps();
