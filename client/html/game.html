@@ -22,8 +22,8 @@ function handleMouseMove(e)
   var x= e.clientX - rect.left;
   var y= e.clientY - rect.top;
   console.log("moved"+x+":"+y);
-  draw(x)
-  socket.emit('move',x);
+  //draw(x)
+  //socket.emit('move',x);
 }
 
 socket.on('connect', () => {
@@ -69,6 +69,7 @@ socket.on('connect', () => {
     </style>
   </head>
   <body>
-   <canvas width="300" height="300"/>
+   <canvas width="900" height="900"></canvas>
+<p id="fps" style="padding:10px;"></p>
   </body>
 </html>

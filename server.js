@@ -25,7 +25,7 @@ app.get('/scripts/:name', function(req , res){
 });
 
 app.get('/', function(req, res){
-  res.sendFile(__dirname + '/game.html');
+  res.sendFile(__dirname + '/client/html/game.html');
 });
 
 /*
