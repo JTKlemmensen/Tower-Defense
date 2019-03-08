@@ -292,12 +292,16 @@ function drawBackground(canvas, context)
         asdX = Math.floor(towerDefense.cameraX/64);
     if(towerDefense.cameraY > 0)
         asdY = Math.floor(towerDefense.cameraY/64);
-    console.log(towerDefense.cameraX+":"+asdX);
     
-    for(var x=0;x<canvas.width/64+1;x++)
-        for(var y=0;y<canvas.height/64+1;y++)
-            if(asdX+x<towerDefense.mapWidth/64 && asdY+y<towerDefense.mapHeight/64)
-            context.drawImage(towerDefense.getTileAt(asdX+x,asdY+y).sprite,asdX+x*64-offsetX,asdY+y*64-offsetY);
+    for(var x=0;x<canvas.width/64+2;x++)
+        for(var y=0;y<canvas.height/64+2;y++)
+        {
+            var tileIndexX = asdX+x-1;
+            var tileIndexY = asdY+y-1;
+            
+            if(tileIndexX >=0 && tileIndexY >= 0 &&tileIndexX<towerDefense.mapWidth/64 && tileIndexY<towerDefense.mapHeight/64)
+                context.drawImage(towerDefense.getTileAt(tileIndexX,tileIndexY).sprite,asdX+(x-1)*64-offsetX,asdY+(y-1)*64-offsetY);
+        }   
     /*for(var grassX =0;grassX<canvas.width/64;grassX++)
         for(var grassY =0;grassY<canvas.height/64;grassY++)
             context.drawImage(towerDefense.getTileAt(Math.round(towerDefense.cameraX/64)+grassX,1).sprite,grassX*64+offsetX,grassY*64+offsetY); */  
