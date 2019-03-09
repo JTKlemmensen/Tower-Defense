@@ -171,6 +171,8 @@ towerDefense.createEntity = function(x,y,sprite)
     var ent = {};
     ent.x = x;
     ent.y = y;
+    ent.width = 64;
+    ent.height = 64;
     ent.sprite = sprite;
     
     return ent;
@@ -184,6 +186,17 @@ towerDefense.createSprite = function(name)
     return sprite;
 }
 
+// SHOULD RUN ON SERVER
+towerDefense.entityAt = function(x,y)
+{
+    console.log(x);
+    for(var i=0;i<entities.length;i++)
+    {
+        var ent = entities[i];
+       if(ent.x<=x && ent.x+ent.width>=x && ent.y<=y && ent.y+ent.height>=y)
+           return ent;
+    }
+}
 ///////////////////////////////////////////////////////////
 //////////////////// CanvasEvents /////////////////////////
 ///////////////////////////////////////////////////////////
@@ -201,6 +214,12 @@ function canvasMouseDown(evt)
     console.log("asdDown");
     towerDefense.mouseDrag = true;
     console.log(towerDefense.mouseDrag);
+    var entFound = towerDefense.entityAt(towerDefense.oldX+towerDefense.cameraX-Math.floor(towerDefense.cameraX/64),
+                                         towerDefense.oldY+towerDefense.cameraY-Math.floor(towerDefense.cameraY/64));
+    console.log(entFound);
+    console.log(towerDefense.oldX+":"+towerDefense.oldY)
+    if(entFound != undefined)
+        entities.splice(entities.indexOf(entFound),1);
 }
 
 function canvasMouseUp()
@@ -263,8 +282,8 @@ towerDefense.events.onDraw = function()
         }
     });
     angle++;
-    console.log("entity count: "+entities.length);
-    console.log("Drew "+drawEnts+" entities")
+    //console.log("entity count: "+entities.length);
+    //console.log("Drew "+drawEnts+" entities")
     updateFps();
 }
 
@@ -300,7 +319,9 @@ function drawBackground(canvas, context)
             var tileIndexY = asdY+y-1;
             
             if(tileIndexX >=0 && tileIndexY >= 0 &&tileIndexX<towerDefense.mapWidth/64 && tileIndexY<towerDefense.mapHeight/64)
+            {
                 context.drawImage(towerDefense.getTileAt(tileIndexX,tileIndexY).sprite,asdX+(x-1)*64-offsetX,asdY+(y-1)*64-offsetY);
+            }
         }   
     /*for(var grassX =0;grassX<canvas.width/64;grassX++)
         for(var grassY =0;grassY<canvas.height/64;grassY++)
