@@ -16,10 +16,9 @@ $(function ()
                             .mouseup(canvasMouseUp)
                             .mousemove(canvasMouseMove)
                             .mouseleave(canvasMouseLeave);
-    
-    createSprite();
-    var ent = createEntity(0,0,'test3');
-    createEntity(50,50,'test2');
+    for(var i=0;i<30;i++)
+        for(var y=0;y<30;y++)
+    towerDefense.createStoneTower(64*i,64*y);
 });
 
 const times = [];
@@ -160,41 +159,29 @@ towerDefense.getTileAt = function(x, y)
 ///////////////////////////////////////////////////////////
 var entities = [];
 
-function StoneTower()
+
+towerDefense.createStoneTower = function(x,y)
 {
-    var ent = createEntity(0,0,'test');
+    var ent = towerDefense.createEntity(x,y,towerDefense.createSprite('test1'));
+    entities.push(ent);
 }
 
-///////////////////////////////////////////////////////////
-//////////////////// Constructors /////////////////////////
-///////////////////////////////////////////////////////////
-function createTower()
-{
-    
-}
-
-function createEntity(x, y, sprite)
+towerDefense.createEntity = function(x,y,sprite)
 {
     var ent = {};
     ent.x = x;
     ent.y = y;
-    ent.sprite = imgs[sprite];
+    ent.sprite = sprite;
     
-    entities.push(ent);
+    return ent;
 }
 
-var x = 0;
-var y= 0;
-function createSprite()
+towerDefense.createSprite = function(name)
 {
-    var img = {};
-    var newImg = new Image;
-    newImg.onload = function () {
-    }
-    newImg.src = '/images/test';
+    var sprite = {};
     
-    img.Image = newImg;
-    return img;
+    sprite.image = imgs[name]
+    return sprite;
 }
 
 ///////////////////////////////////////////////////////////
@@ -255,6 +242,7 @@ towerDefense.events.onDrag = function(oldX, oldY, newX, newY)
     return true;
 }
 
+var angle=0;
 towerDefense.events.onDraw = function()
 {
     // Draw code
@@ -263,8 +251,20 @@ towerDefense.events.onDraw = function()
     context.clearRect(0,0,canvas.width,canvas.height);
     
     drawBackground(canvas,context);
-    
-    drawRotatedImg(imgs['test1'],50,50,x++,context);
+    var x=90;
+    //drawRotatedImg(imgs['test1'],64,64,x++,context);
+    var drawEnts = 0;
+    entities.forEach(function(el){
+        if(el.x+el.sprite.image.width>towerDefense.cameraX && el.x<towerDefense.cameraX+towerDefense.canvasWidth &&
+           el.y+el.sprite.image.height>towerDefense.cameraY && el.y<towerDefense.cameraY+towerDefense.canvasHeight)
+        {
+            drawEnts++;
+            drawRotatedImg(el.sprite.image,el.x-towerDefense.cameraX+Math.floor(towerDefense.cameraX/64),el.y-towerDefense.cameraY+Math.floor(towerDefense.cameraY/64),angle,context);
+        }
+    });
+    angle++;
+    console.log("entity count: "+entities.length);
+    console.log("Drew "+drawEnts+" entities")
     updateFps();
 }
 
