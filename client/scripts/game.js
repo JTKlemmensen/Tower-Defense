@@ -18,7 +18,14 @@ $(function ()
                             .mouseleave(canvasMouseLeave);
     for(var i=0;i<30;i++)
         for(var y=0;y<30;y++)
-    towerDefense.createStoneTower(64*i,64*y);
+            if(i%4==0)
+                towerDefense.createSuperRocketLauncher(64*i,64*y);
+            else if(i%3==0)
+                towerDefense.createRock(64*i,64*y);
+            else if(i%2==0)
+                towerDefense.createDoubleRocketLauncher(64*i,64*y);
+            else
+                towerDefense.createSingleRocketLauncher(64*i,64*y)
 });
 
 const times = [];
@@ -52,7 +59,7 @@ towerDefense.setupCanvas = function()
 
 function loadImages()
 {
-    var imgNames = ['test','test1','test2','test3','test4'];
+    var imgNames = ['Rock','test1','test2','test3','test4', 'SingleRocketLauncher', 'DoubleRocketLauncher', 'SuperRocketLauncher'];
     imgNames.forEach(function(el){
         loadImage(el);
     });
@@ -153,18 +160,41 @@ towerDefense.getTileAt = function(x, y)
 {
     return towerDefense.map[x][y];
 }
+///////////////////////////////////////////////////////////
+/////////////////////// Towers ////////////////////////////
+///////////////////////////////////////////////////////////
+
+towerDefense.createSuperRocketLauncher = function(x,y)
+{
+    var ent = towerDefense.createEntity(x,y,towerDefense.createSprite('SuperRocketLauncher'));
+    entities.push(ent);
+}
+
+
+towerDefense.createDoubleRocketLauncher = function(x,y)
+{
+    var ent = towerDefense.createEntity(x,y,towerDefense.createSprite('DoubleRocketLauncher'));
+    entities.push(ent);
+}
+
+towerDefense.createSingleRocketLauncher = function(x,y)
+{
+    var ent = towerDefense.createEntity(x,y,towerDefense.createSprite('SingleRocketLauncher'));
+    entities.push(ent);
+}
+
+towerDefense.createRock = function(x,y)
+{
+    var ent = towerDefense.createEntity(x,y,towerDefense.createSprite('Rock'));
+    entities.push(ent);
+}
 
 ///////////////////////////////////////////////////////////
 ////////////////////// Entities ///////////////////////////
 ///////////////////////////////////////////////////////////
 var entities = [];
 
-
-towerDefense.createStoneTower = function(x,y)
-{
-    var ent = towerDefense.createEntity(x,y,towerDefense.createSprite('test1'));
-    entities.push(ent);
-}
+/* Should run on the server side  */
 
 towerDefense.createEntity = function(x,y,sprite)
 {
@@ -186,7 +216,6 @@ towerDefense.createSprite = function(name)
     return sprite;
 }
 
-// SHOULD RUN ON SERVER
 towerDefense.entityAt = function(x,y)
 {
     console.log(x);
@@ -234,6 +263,14 @@ function canvasMouseMove(evt)
     
     var newX = evt.clientX - rect.left;
     var newY =evt.clientY - rect.top;
+    
+    var entFound = towerDefense.entityAt(newX+towerDefense.cameraX-Math.floor(towerDefense.cameraX/64),
+                                         newY+towerDefense.cameraY-Math.floor(towerDefense.cameraY/64));
+    if(entFound!=undefined)
+    {
+        selectX = entFound.x;
+        selectY = entFound.y;
+    }
     if(towerDefense.mouseDrag == true)
         if(towerDefense.events.onDrag(towerDefense.oldX, towerDefense.oldY, newX, newY) == false)
             towerDefense.mouseDrag = true;
@@ -262,6 +299,8 @@ towerDefense.events.onDrag = function(oldX, oldY, newX, newY)
 }
 
 var angle=0;
+var selectX;
+var selectY;
 towerDefense.events.onDraw = function()
 {
     // Draw code
@@ -278,9 +317,11 @@ towerDefense.events.onDraw = function()
            el.y+el.sprite.image.height>towerDefense.cameraY && el.y<towerDefense.cameraY+towerDefense.canvasHeight)
         {
             drawEnts++;
-            drawRotatedImg(el.sprite.image,el.x-towerDefense.cameraX+Math.floor(towerDefense.cameraX/64),el.y-towerDefense.cameraY+Math.floor(towerDefense.cameraY/64),angle,context);
+            drawRotatedImg(el.sprite.image,el.x-towerDefense.cameraX+Math.floor(towerDefense.cameraX/64),el.y-towerDefense.cameraY+Math.floor(towerDefense.cameraY/64),15,context);
         }
     });
+    context.fillStyle = "rgba(255, 255, 255, 0.2)";
+    context.fillRect(selectX-towerDefense.cameraX+Math.floor(towerDefense.cameraX/64),selectY-towerDefense.cameraY+Math.floor(towerDefense.cameraY/64), 64, 64);
     angle++;
     //console.log("entity count: "+entities.length);
     //console.log("Drew "+drawEnts+" entities")
